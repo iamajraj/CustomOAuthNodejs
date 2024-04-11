@@ -1,0 +1,16 @@
+{
+  "name": "ts-custom-oauth",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "server": "node --watch --loader ts-node/esm ./server/main.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "ts-node": "^10.9.2"
+  }
+}
