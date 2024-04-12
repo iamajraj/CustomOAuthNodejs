@@ -30,10 +30,10 @@ interface Session {
   refreshToken: string;
   accessTokenExp: number;
   refreshTokenExp: number;
-  id: string;
+  userId: string;
 }
 
-const sessions: Session[] = [];
+let sessions: Session[] = [];
 
 function isUserExists(id: string) {
   return users.some((user) => user.id === id);
@@ -191,8 +191,8 @@ createServer((req, res) => {
           authorizationTokens = authorizationTokens.filter(
             (item) => item.key !== key
           );
-          let session = {
-            id: user.id,
+          let session: Session = {
+            userId: user.id,
             accessToken: accessToken,
             refreshToken: refreshToken,
             accessTokenExp: new Date().getTime() / 1000 + 5,
@@ -222,8 +222,39 @@ createServer((req, res) => {
           res.end('<p>Token Expired</p>');
         } else {
           res.end(
-            JSON.stringify(users.find((user) => user.id === session!.id))
+            JSON.stringify(users.find((user) => user.id === session!.userId))
           );
+        }
+      }
+    }
+  }
+
+  if(url.pathname === '/accessToken'){
+    if(!url.searchParams.get('refreshToken')){
+      res.end("<h1>forbidden</h1>")
+    }else{
+      let session = sessions.find((ses) => ses.refreshToken === url.searchParams.get("refreshToken"))
+      if(!session){
+        res.end("<h1>Invalid refresh token</h1>")
+      }else{
+        if(session.refreshTokenExp < (new Date().getTime() / 1000)){
+          res.end("<h1>Refresh Token Expired</h1>")
+        }else{
+          let newAccessToken = generateRandomKey()
+          let newAccessTokenExp = ((new Date().getTime()) / 1000) + 60 * 60
+          sessions = sessions.map((ses) => {
+            if(ses.refreshToken === session.refreshToken){ 
+              return {
+                ...ses,
+                accessToken:newAccessToken,
+                accessTokenExp: newAccessTokenExp
+              }
+            }else{
+              return ses
+            }
+          })
+
+          res.end(JSON.stringify({newAccessToken,newAccessTokenExp}))
         }
       }
     }
